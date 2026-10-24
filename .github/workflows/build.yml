@@ -1,0 +1,115 @@
+name: Build
+
+on:
+  push:
+    branches: [main, ci]
+    tags: ['*']
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  atmosphere:
+    name: Atmosphère (patched)
+    runs-on: ubuntu-latest
+    container: devkitpro/devkita64:latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          sparse-checkout: .github
+
+      - name: Read manifest
+        id: m
+        run: |
+          apt-get update -qq && apt-get install -y -qq jq python3-lz4 python3-pycryptodome zip unzip >/dev/null
+          echo "tag=$(jq -r .atmosphere.tag .github/components.json)" >> "$GITHUB_OUTPUT"
+          echo "libnx=$(jq -r .atmosphere.libnx .github/components.json)" >> "$GITHUB_OUTPUT"
+
+      - name: Build libnx
+        run: |
+          git init -q /libnx && cd /libnx
+          git fetch -q --depth 1 https://github.com/switchbrew/libnx.git "${{ steps.m.outputs.libnx }}"
+          git checkout -q FETCH_HEAD
+          make -j"$(nproc)" install
+
+      - name: Fetch Atmosphère and apply patches
+        run: |
+          git clone -q -c advice.detachedHead=false --depth 1 --branch "${{ steps.m.outputs.tag }}" \
+            https://github.com/Atmosphere-NX/Atmosphere.git /ams
+          cd /ams
+          git config user.email ci@localhost && git config user.name ci
+          for p in $(jq -r '.atmosphere.patches[]' "$GITHUB_WORKSPACE/.github/components.json"); do
+            echo "::group::$p"; git am "$GITHUB_WORKSPACE/.github/patches/atmosphere/$p"; echo "::endgroup::"
+          done
+
+      - name: Build
+        run: |
+          cd /ams
+          make -j"$(nproc)" dist-no-debug-nx_release
+          rel=out/nintendo_nx_arm64_armv8a/release
+          mkdir -p "$GITHUB_WORKSPACE/ams"
+          cd "$GITHUB_WORKSPACE/ams"
+          unzip -q /ams/$rel/atmosphere-*.zip
+          cp /ams/$rel/fusee.bin .
+          # hekate boots exosphere.bin directly (secmon= in hekate_ipl.ini); dist zip does not ship it.
+          cp "$(find /ams/exosphere/out -name exosphere.bin | head -1)" atmosphere/exosphere.bin
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: atmosphere
+          path: ams/
+
+  pack:
+    name: Ultra.zip
+    needs: atmosphere
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/download-artifact@v4
+        with:
+          name: atmosphere
+          path: ams
+
+      - name: Overlay freshly built Atmosphère
+        run: |
+          # Only Atmosphère's own binaries are replaced; reboot_payload.bin stays hekate on purpose.
+          install -D ams/atmosphere/package3           atmosphere/package3
+          install -D ams/atmosphere/stratosphere.romfs atmosphere/stratosphere.romfs
+          install -D ams/atmosphere/exosphere.bin      atmosphere/exosphere.bin
+          install -D ams/switch/daybreak.nro           switch/daybreak/daybreak.nro
+
+      - name: Component versions
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+        run: python3 .github/scripts/check_versions.py --root .
+
+      - name: Package
+        run: |
+          mkdir -p dist
+          zip -q -r -9 dist/Ultra.zip . -x '.git/*' '.github/*' 'ams/*' 'dist/*' '.gitattributes'
+          cd dist && sha256sum Ultra.zip > SHA256SUMS && cat SHA256SUMS
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: Ultra
+          path: dist/
+
+  release:
+    name: Draft release
+    if: startsWith(github.ref, 'refs/tags/')
+    needs: pack
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: Ultra
+          path: dist
+      - name: Create draft release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create "$GITHUB_REF_NAME" dist/Ultra.zip dist/SHA256SUMS --repo "$GITHUB_REPOSITORY" --draft --title "$GITHUB_REF_NAME"

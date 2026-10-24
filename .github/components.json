@@ -1,0 +1,120 @@
+{
+  "atmosphere": {
+    "repo": "Atmosphere-NX/Atmosphere",
+    "tag": "1.12.1",
+    "libnx": "b156b4774fb2df7b93402169509266da7547fc4c",
+    "patches": [
+      "0001-Set-project-name-and-version.patch",
+      "0002-Daybreak-exFAT-drivers-and-better-reset.patch",
+      "0003-1.85MB-free.patch",
+      "0005-Aotag-driver.patch"
+    ]
+  },
+  "components": [
+    {
+      "name": "hekate",
+      "repo": "CTCaer/hekate",
+      "path": "payload.bin",
+      "kind": "magic",
+      "magic": "ICTC"
+    },
+    {
+      "name": "Lockpick_RCM",
+      "repo": "impeeza/Lockpick_RCMDecScots",
+      "path": "bootloader/payloads/Lockpick_RCM.bin",
+      "kind": "magic",
+      "magic": "LOCK"
+    },
+    {
+      "name": "TegraExplorer",
+      "repo": "suchmememanyskill/TegraExplorer",
+      "path": "bootloader/payloads/TegraExplorer.bin",
+      "kind": "regex",
+      "regex": "VER \u0000([0-9.]+)\u0000Script requires"
+    },
+    {
+      "name": "Horizon OC",
+      "repo": "Horizon-OC/Horizon-OC",
+      "path": "switch/.overlays/horizon-oc-overlay.ovl",
+      "kind": "nacp"
+    },
+    {
+      "name": "SaltyNX",
+      "repo": "masagrator/SaltyNX",
+      "path": "atmosphere/contents/0000000000534C56/toolbox.json",
+      "kind": "toolbox"
+    },
+    {
+      "name": "FPSLocker",
+      "repo": "masagrator/FPSLocker",
+      "path": "switch/.overlays/FPSLocker.ovl",
+      "kind": "nacp"
+    },
+    {
+      "name": "nx-ovlloader",
+      "repo": "ppkantorski/nx-ovlloader",
+      "path": "atmosphere/contents/420000000007E51A/toolbox.json",
+      "kind": "toolbox"
+    },
+    {
+      "name": "Ultrahand",
+      "repo": "ppkantorski/Ultrahand-Overlay",
+      "path": "switch/.overlays/ovlmenu.ovl",
+      "kind": "nacp"
+    },
+    {
+      "name": "Sysmodules",
+      "repo": "ppkantorski/ovl-sysmodules",
+      "path": "switch/.overlays/ovlSysmodules.ovl",
+      "kind": "nacp"
+    },
+    {
+      "name": "Status Monitor",
+      "repo": "ppkantorski/Status-Monitor-Overlay",
+      "path": "switch/.overlays/Status-Monitor-Overlay.ovl",
+      "kind": "nacp"
+    },
+    {
+      "name": "ReverseNX-RT",
+      "repo": "ppkantorski/ReverseNX-RT",
+      "path": "switch/.overlays/ReverseNX-RT-ovl.ovl",
+      "kind": "nacp"
+    },
+    {
+      "name": "EdiZon",
+      "repo": "proferabg/EdiZon-Overlay",
+      "path": "switch/.overlays/ovlEdiZon.ovl",
+      "kind": "nacp"
+    },
+    {
+      "name": "AiO Switch Updater",
+      "repo": "HamletDuFromage/aio-switch-updater",
+      "path": "switch/aio-switch-updater/aio-switch-updater.nro",
+      "kind": "nacp"
+    },
+    {
+      "name": "nx-hbmenu",
+      "repo": "switchbrew/nx-hbmenu",
+      "path": "hbmenu.nro",
+      "kind": "nacp"
+    },
+    {
+      "name": "MissionControl",
+      "repo": "ndeadly/MissionControl",
+      "kind": "pinned",
+      "version": "0.16.0"
+    },
+    {
+      "name": "disable_remap_dialog",
+      "repo": "ndeadly/disable_remap_dialog",
+      "kind": "pinned",
+      "version": "1.0.14"
+    },
+    {
+      "name": "sys-con",
+      "repo": "o0Zz/sys-con",
+      "kind": "pinned",
+      "version": "2.0.0"
+    }
+  ]
+}
