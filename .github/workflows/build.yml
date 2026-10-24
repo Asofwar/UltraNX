@@ -103,7 +103,7 @@ jobs:
       - name: Package
         run: |
           mkdir -p dist
-          zip -q -r -9 dist/Ultra.zip . -x '.git/*' '.github/*' 'ams/*' 'dist/*' '.gitattributes'
+          zip -q -r -9 dist/Ultra.zip . -x '.git/*' '.github/*' 'ams/*' 'dist/*' '.gitattributes' 'README.md' 'README_ENG.md'
           cd dist && sha256sum Ultra.zip > SHA256SUMS && cat SHA256SUMS
 
       - uses: actions/upload-artifact@v4
