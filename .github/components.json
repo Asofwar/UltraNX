@@ -116,5 +116,10 @@
       "kind": "pinned",
       "version": "2.0.0"
     }
-  ]
+  ],
+  "ultra_tuner": {
+    "repo": "Ultra-NX/Ultra-Tuner",
+    "tag": "23-R8",
+    "asset": "Ultra-Tuner.zip"
+  }
 }

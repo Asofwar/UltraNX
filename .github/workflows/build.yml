@@ -47,7 +47,8 @@ jobs:
       - name: Build
         run: |
           cd /ams
-          make -j"$(nproc)" dist-no-debug-nx_release
+          # haze shader generation races under -j; a serial pass finishes whatever the parallel one left.
+          make -j"$(nproc)" dist-no-debug-nx_release || make -j1 dist-no-debug-nx_release
           rel=out/nintendo_nx_arm64_armv8a/release
           mkdir -p "$GITHUB_WORKSPACE/ams"
           cd "$GITHUB_WORKSPACE/ams"
@@ -80,6 +81,19 @@ jobs:
           install -D ams/atmosphere/stratosphere.romfs atmosphere/stratosphere.romfs
           install -D ams/atmosphere/exosphere.bin      atmosphere/exosphere.bin
           install -D ams/switch/daybreak.nro           switch/daybreak/daybreak.nro
+
+      - name: Add Ultra Tuner package
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          # In git it is a dangling submodule (no .gitmodules), so take the package from its pinned release.
+          repo=$(jq -r .ultra_tuner.repo .github/components.json)
+          tag=$(jq -r .ultra_tuner.tag .github/components.json)
+          asset=$(jq -r .ultra_tuner.asset .github/components.json)
+          gh release download "$tag" --repo "$repo" --pattern "$asset" --dir "$RUNNER_TEMP"
+          rm -rf "switch/.packages/Ultra Tuner"
+          unzip -q "$RUNNER_TEMP/$asset" 'switch/.packages/Ultra Tuner/*' -d .
+          test -f "switch/.packages/Ultra Tuner/package.ini"
 
       - name: Component versions
         env:
